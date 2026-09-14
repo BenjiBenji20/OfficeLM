@@ -1,0 +1,115 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master, dev ]
+
+jobs:
+  test:
+    name: Run Pytest Test Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: x_com_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # App settings
+      APP_NAME: ${{ secrets.APP_NAME || 'x_com' }}
+      ENVIRONMENT: ${{ secrets.ENVIRONMENT || 'test' }}
+      DEBUG: ${{ secrets.DEBUG || 'true' }}
+      LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'INFO' }}
+
+      # Database settings
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@localhost:5432/x_com_test' }}
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@localhost:5432/x_com_test' }}
+
+      # 5mins db io throttling time
+      DB_IO_SESSION_THROTTLING_TIME_S: ${{ secrets.DB_IO_SESSION_THROTTLING_TIME_S || 300 }}
+
+      # Reddis settings
+      REDIS_URL: ${{ secrets.REDIS_URL || 'redis://localhost:6379/0' }}
+      TEST_REDIS_URL: ${{ secrets.TEST_REDIS_URL || 'redis://localhost:6379/0' }}
+
+      # Header settings (security)
+      SECRET_HEADER_NAME: ${{ secrets.SECRET_HEADER_NAME || 'x' }}
+      SECRET_HEADER_VALUE: ${{ secrets.SECRET_HEADER_VALUE || 'xx' }}
+
+      # Swagger settings
+      API_DOCS_URL: ${{ secrets.API_DOCS_URL || 'xxx' }}
+      API_REDOC_URL: ${{ secrets.API_REDOC_URL || 'xxxx' }}
+      OPENAPI_URL: ${{ secrets.OPENAPI_URL || 'xxxxx' }}
+
+      # JWT settings
+      ACCESS_JWT_SECRET_KEY: ${{ secrets.ACCESS_JWT_SECRET_KEY || 'xxxxxx' }}
+      REFRESH_JWT_SECRET_KEY: ${{ secrets.REFRESH_JWT_SECRET_KEY || 'xxxxxxx' }}
+      ACCESS_JWT_EXPIRY_SEC: ${{ secrets.ACCESS_JWT_EXPIRY_SEC || '900' }}
+      REFRESH_JWT_EXPIRY_SEC: ${{ secrets.REFRESH_JWT_EXPIRY_SEC || '604800' }}
+      JWT_ALGORITHM: ${{ secrets.JWT_ALGORITHM || 'HS256' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: uv sync --all-groups
+
+      - name: Run Migrations
+        run: uv run alembic upgrade head
+
+      - name: Run Pytest
+        run: uv run pytest
+
+  docker-build:
+    name: Verify Docker Image Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: x-com:test
+          
