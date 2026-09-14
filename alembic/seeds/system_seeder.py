@@ -29,25 +29,15 @@ class SystemSeeder(BaseSeeder):
         # ------------------------------------------------------------------
         roles_data = [
             {
-                "name": RoleName.SUPER_ADMIN.value,
-                "description": "System Super Administrator with full root access",
+                "name": RoleName.USER.value,
+                "description": "System User with regular access",
                 "is_system_role": True,
             },
             {
                 "name": RoleName.ADMIN.value,
                 "description": "System Administrator for managing users and registrations",
                 "is_system_role": True,
-            },
-            {
-                "name": RoleName.STAFF_USER.value,
-                "description": "Standard internal system employee/user",
-                "is_system_role": True,
-            },
-            {
-                "name": RoleName.PUBLIC_USER.value,
-                "description": "External public or limited guest user",
-                "is_system_role": True,
-            },
+            }
         ]
 
         roles_map: dict[str, Role] = {}
@@ -110,25 +100,22 @@ class SystemSeeder(BaseSeeder):
                     rp = RolePermission(role_id=role.id, permission_id=perm.id)
                     session.add(rp)
 
-        # Super Admin gets all system permissions
+        # Admin gets all system permissions
         all_permissions = list(permissions_map.values())
-        await link_role_permissions(roles_map[RoleName.SUPER_ADMIN.value], all_permissions)
-
-        # Admin gets all authentication & profile permissions
         await link_role_permissions(roles_map[RoleName.ADMIN.value], all_permissions)
 
-        # Staff user gets read/profile permissions
-        staff_perms = [
+        # Regular User gets read/profile permissions
+        user_perms = [
             permissions_map[SystemPermission.PROFILE_USER_READ.value],
             permissions_map[SystemPermission.PROFILE_USER_UPDATE.value],
         ]
-        await link_role_permissions(roles_map[RoleName.STAFF_USER.value], staff_perms)
+        await link_role_permissions(roles_map[RoleName.USER.value], user_perms)
 
         await session.flush()
         logger.info("Mapped default permissions to system roles.")
 
         # ------------------------------------------------------------------
-        # 4. Seed Initial Super Admin User (Bypasses manual admin approval)
+        # 4. Seed Initial Admin User (Bypasses manual admin approval)
         # ------------------------------------------------------------------
         sa_username = settings.SEED_SUPERADMIN_USERNAME
         sa_email = settings.SEED_SUPERADMIN_EMAIL
@@ -151,15 +138,15 @@ class SystemSeeder(BaseSeeder):
             session.add(sa_user)
             await session.flush()
 
-            # Attach SUPER_ADMIN role via UserRole junction
-            ur = UserRole(user_id=sa_user.id, role_id=roles_map[RoleName.SUPER_ADMIN.value].id)
+            # Attach ADMIN role via UserRole junction
+            ur = UserRole(user_id=sa_user.id, role_id=roles_map[RoleName.ADMIN.value].id)
             session.add(ur)
 
-            # Create UserProfile for Super Admin
+            # Create UserProfile for Admin
             sa_profile = UserProfile(
                 user_id=sa_user.id,
                 first_name="System",
-                last_name="SuperAdmin",
+                last_name="Admin",
                 gender=UserGender.OTHERS,
                 cellphone_number="+0000000000",
                 country="Philippines",
@@ -168,9 +155,10 @@ class SystemSeeder(BaseSeeder):
             await session.flush()
 
             logger.info(
-                f"Successfully seeded Super Admin user: {sa_username} ({sa_email}) [Status: ACTIVE]"
+                f"Successfully seeded Admin user: {sa_username} ({sa_email}) [Status: ACTIVE]"
             )
         else:
-            logger.info(f"Super Admin user already exists: {sa_username}")
+            logger.info(f"Admin user already exists: {sa_username}")
 
         logger.info("--- Completed System Seeding ---")
+
