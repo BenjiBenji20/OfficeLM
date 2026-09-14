@@ -37,7 +37,7 @@ jobs:
 
     env:
       # App settings
-      APP_NAME: ${{ secrets.APP_NAME || 'x_com' }}
+      APP_NAME: ${{ secrets.APP_NAME || 'OfficeLM System' }}
       ENVIRONMENT: ${{ secrets.ENVIRONMENT || 'test' }}
       DEBUG: ${{ secrets.DEBUG || 'true' }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'INFO' }}
