@@ -15,13 +15,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: x_com_test
+          POSTGRES_DB: officelm_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U postgres -d officelm_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -41,16 +41,27 @@ jobs:
       ENVIRONMENT: ${{ secrets.ENVIRONMENT || 'test' }}
       DEBUG: ${{ secrets.DEBUG || 'true' }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'INFO' }}
+      DEPLOYMENT_MODE: ${{ secrets.DEPLOYMENT_MODE || 'cloud' }}
 
-      # Database settings
-      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@localhost:5432/x_com_test' }}
+      # Database settings - Staging
+      POSTGRES_STAGING_USER: ${{ secrets.POSTGRES_STAGING_USER || 'x' }}
+      POSTGRES_STAGING_PASSWORD: ${{ secrets.POSTGRES_STAGING_PASSWORD || 'x' }}
+      POSTGRES_STAGING_DB: ${{ secrets.POSTGRES_STAGING_DB || 'x' }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@localhost:5432/x_com_staging' }}
+
+      # Database settings - Test
+      POSTGRES_TEST_USER: ${{ secrets.POSTGRES_TEST_USER || 'x' }}
+      POSTGRES_TEST_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD || 'x' }}
+      POSTGRES_TEST_DB: ${{ secrets.POSTGRES_TEST_DB || 'x' }}
       TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@localhost:5432/x_com_test' }}
 
-      # 5mins db io throttling time
+      # Throttling
       DB_IO_SESSION_THROTTLING_TIME_S: ${{ secrets.DB_IO_SESSION_THROTTLING_TIME_S || 300 }}
 
-      # Reddis settings
+      # Redis settings
+      REDIS_STAGING_PASSWORD: ${{ secrets.REDIS_STAGING_PASSWORD || 'x' }}
       REDIS_URL: ${{ secrets.REDIS_URL || 'redis://localhost:6379/0' }}
+      REDIS_TEST_PASSWORD: ${{ secrets.REDIS_TEST_PASSWORD || 'x' }}
       TEST_REDIS_URL: ${{ secrets.TEST_REDIS_URL || 'redis://localhost:6379/0' }}
 
       # Header settings (security)
@@ -111,5 +122,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          tags: x-com:test
-          
+          tags: officelm:test
