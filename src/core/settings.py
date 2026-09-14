@@ -2,7 +2,7 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Continental Sales Inc. ERP Server System"
+    APP_NAME: str = "OfficeLM System"
     DEBUG: bool = True
     ENVIRONMENT: Literal["dev", "prod", "test"] = "dev"
     LOG_LEVEL: str = "INFO"

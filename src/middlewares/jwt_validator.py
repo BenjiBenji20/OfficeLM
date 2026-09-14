@@ -15,7 +15,7 @@ from utils.maintain_cache_key import MaintainCacheKeyUtils
 
 class JWTValidator(BaseHTTPMiddleware):
     """
-    High-performance, Zero-DB JWT Validation Middleware for private ERP routes.
+    High-performance, Zero-DB JWT Validation Middleware for private routes.
     Executes in-memory CPU verification + Redis O(1) session checks (~0.5ms).
     Injects pre-verified claims into request.state for 0ms downstream route access.
     """
