@@ -7,15 +7,12 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - OLLAMA_BASE_URL=http://ollama:11434
-      - MINIO_ENDPOINT=minio:9000
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
 
   postgres:
@@ -47,24 +44,6 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: quay.io/minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web Console  →  http://localhost:9001
-    volumes:
-      - miniodata:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
-
   # ── Optional: Local LLM via Ollama ──────────────────────────────────────────
   # Activated when LLM_PROVIDER=ollama (default).
   # Run with: docker compose --profile local-llm up
@@ -87,6 +66,18 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
+  # ── Storage (Placeholder) ───────────────────────────────────────────────────
+  # Uncomment when object storage is wired in the application.
+  # Note: Official MinIO community public images were archived by MinIO.
+  # S3-compatible alternatives like SeaweedFS or Garage can be used here.
+  # minio:
+  #   image: chrislusf/seaweedfs:latest
+  #   command: "server -s3"
+  #   ports:
+  #     - "9000:9000"
+  #   volumes:
+  #     - miniodata:/data
+
   # ── Qdrant Vector DB ─────────────────────────────────────────────────────────
   # Uncomment when the RAG pipeline is implemented.
   # qdrant:
@@ -107,6 +98,6 @@ services:
 volumes:
   pgdata:
   redisdata:
-  miniodata:
   ollamadata:
+  # miniodata:
   # qdrantdata:
