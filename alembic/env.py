@@ -30,18 +30,11 @@ config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
-# Format connection URL for Alembic CLI (prefer psycopg sync driver)
+# Format connection URL for Alembic CLI (using asyncpg driver)
 if settings.ENVIRONMENT == "test" and settings.TEST_DATABASE_URL:
     db_url = settings.TEST_DATABASE_URL
 else:
-    db_url = settings.DATABASE_URL or ""
-
-if db_url.startswith("postgresql+asyncpg://"):
-    db_url = db_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
-elif db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
-elif db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+    db_url = settings.async_database_url
 
 config.set_main_option("sqlalchemy.url", db_url)
 
