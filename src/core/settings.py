@@ -96,7 +96,7 @@ class Settings(BaseSettings):
         return url
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("secrets.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
