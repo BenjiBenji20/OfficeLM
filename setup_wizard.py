@@ -81,7 +81,7 @@ def generate_env(
 
 # CORE APPLICATION
 APP_NAME="OfficeLM System"
-ENVIRONMENT=production
+ENVIRONMENT=prod
 DEBUG=false
 SECRET_KEY={secret_key}
 FRONTEND_URL=http://localhost:3000
