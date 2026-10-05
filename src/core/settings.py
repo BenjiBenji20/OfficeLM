@@ -56,6 +56,34 @@ class Settings(BaseSettings):
     SEED_SUPERADMIN_EMAIL: str = "admin@system.local"
     SEED_SUPERADMIN_PASSWORD: str = "Admin@123456"
 
+    # ── LLM Provider Settings ────────────────────────────────────────────────
+    # Which provider handles chat: "ollama" | "openai" | "gemini"
+    LLM_PROVIDER: Literal["ollama", "openai", "gemini"] = "ollama"
+    # Identifier of the active chat model (must be a value in SupportedChatModel)
+    LLM_MODEL: str = "llama3.1:8b"
+    # Base URL for the Ollama API (irrelevant when using remote providers)
+    OLLAMA_BASE_URL: str = "http://ollama:11434"
+
+    # ── Embedding Settings ───────────────────────────────────────────────────
+    # Which provider serves embeddings: "ollama" | "openai" | "gemini"
+    EMBEDDING_PROVIDER: Literal["ollama", "openai", "gemini"] = "ollama"
+    # Identifier of the embedding model (must be a value in SupportedEmbeddingModel)
+    EMBEDDING_MODEL: str = "nomic-embed-text"
+
+    # ── OpenAI Settings (used when LLM_PROVIDER or EMBEDDING_PROVIDER = "openai") ──
+    OPENAI_API_KEY: str | None = None
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"  # Override for compatible APIs
+
+    # ── Gemini Settings (used when LLM_PROVIDER or EMBEDDING_PROVIDER = "gemini") ──
+    GEMINI_API_KEY: str | None = None
+
+    # ── MinIO / Object Storage Settings ─────────────────────────────────────
+    MINIO_ROOT_USER: str | None = None
+    MINIO_ROOT_PASSWORD: str | None = None
+    MINIO_ENDPOINT: str = "minio:9000"          # Internal Docker network address
+    MINIO_SECURE: bool = False                   # TLS; False for local Docker setup
+    MINIO_DEFAULT_BUCKET: str = "officelm-files"
+
     @property
     def async_database_url(self) -> str:
         url = self.DATABASE_URL or ""
