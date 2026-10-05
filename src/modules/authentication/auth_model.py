@@ -16,6 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base, TimestampMixin, uuid_pk
 
 if TYPE_CHECKING:
+    from modules.chat.chat_model import ChatMessage, ChatRoom, ChatRoomMember, FileJob
     from modules.profile.user_profile_model import UserProfile
     from modules.session.session_model import UserSession
 
@@ -158,3 +159,27 @@ class User(Base, TimestampMixin):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    # One-to-Many: User (1) -> ChatRoom (N) [created rooms]
+    created_rooms: Mapped[List["ChatRoom"]] = relationship(
+        "ChatRoom",
+        back_populates="creator",
+        foreign_keys="ChatRoom.creator_id",
+    )
+    # One-to-Many: User (1) -> ChatRoomMember (N)
+    room_memberships: Mapped[List["ChatRoomMember"]] = relationship(
+        "ChatRoomMember",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    # One-to-Many: User (1) -> ChatMessage (N)
+    messages: Mapped[List["ChatMessage"]] = relationship(
+        "ChatMessage",
+        back_populates="sender",
+    )
+    # One-to-Many: User (1) -> FileJob (N)
+    file_jobs: Mapped[List["FileJob"]] = relationship(
+        "FileJob",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
